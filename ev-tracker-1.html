@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#f0f4f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>EV Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8eef5;
+    --border: #ccd8e8;
+    --accent: #0077cc;
+    --accent2: #00996e;
+    --accent3: #d94f00;
+    --warn: #b07d00;
+    --text: #2a3a4a;
+    --text-dim: #7a90a8;
+    --text-bright: #1a2a3a;
+    --font-display: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-body: 'Exo 2', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(0,119,204,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(0,153,110,0.05) 0%, transparent 50%);
+  }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(240,244,248,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem; font-weight: 700;
+    letter-spacing: 3px; color: var(--accent);
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--accent2); }
+  .api-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+  .api-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-dim);
+    transition: background 0.3s;
+  }
+  .api-dot.ok { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .api-dot.err { background: var(--accent3); }
+
+  /* NAV TABS */
+  nav {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav button {
+    flex: 1; min-width: 80px;
+    padding: 12px 8px;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-dim); cursor: pointer;
+    font-family: var(--font-display); font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  nav button.active {
+    color: var(--accent); border-bottom-color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
+  nav button:hover:not(.active) { color: var(--text); }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* SECTION CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px; margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.25;
+  }
+  .card-title {
+    font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .step-badge {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* FORM ELEMENTS */
+  .field { margin-bottom: 12px; }
+  label {
+    display: block; font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    width: 100%; padding: 10px 12px;
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: 5px; color: var(--text-bright);
+    font-family: var(--font-mono); font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+  }
+  input[readonly] { color: var(--accent2); border-color: rgba(0,255,136,0.3); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* PHOTO UPLOAD */
+  .photo-zone {
+    border: 2px dashed var(--border);
+    border-radius: 8px; padding: 20px;
+    text-align: center; cursor: pointer;
+    transition: all 0.2s; position: relative;
+    background: rgba(240,244,248,0.8);
+  }
+  .photo-zone:hover { border-color: var(--accent); background: rgba(0,212,255,0.03); }
+  .photo-zone.has-image { border-color: var(--accent2); border-style: solid; }
+  .photo-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .photo-zone-icon { font-size: 2rem; margin-bottom: 6px; }
+  .photo-zone-text {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .photo-preview {
+    max-width: 100%; max-height: 160px; border-radius: 5px;
+    object-fit: cover; display: none; margin: 0 auto;
+  }
+  .photo-preview.visible { display: block; }
+
+  /* AI STATUS */
+  .ai-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 5px;
+    font-family: var(--font-mono); font-size: 0.7rem;
+    margin-top: 8px; min-height: 36px;
+    background: rgba(240,244,248,0.9); border: 1px solid var(--border);
+  }
+  .ai-status.loading { color: var(--warn); border-color: rgba(255,204,0,0.3); }
+  .ai-status.success { color: var(--accent2); border-color: rgba(0,255,136,0.3); }
+  .ai-status.error { color: var(--accent3); border-color: rgba(255,107,53,0.3); }
+  .spinner {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid transparent; border-top-color: var(--warn);
+    animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EXTRACTED VALUE DISPLAY */
+  .extracted {
+    display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .extracted-val {
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 5px; padding: 8px 12px; flex: 1; min-width: 100px;
+  }
+  .extracted-val .ev-label {
+    font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px;
+  }
+  .extracted-val .ev-value {
+    font-family: var(--font-display); font-size: 1.3rem; font-weight: 700;
+    color: var(--accent2);
+  }
+
+  /* RESULT DISPLAY */
+  .result-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
+  }
+  .result-item {
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px;
+  }
+  .result-item .r-label {
+    font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .result-item .r-value {
+    font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+    color: var(--accent);
+  }
+  .result-item .r-unit { font-size: 0.75rem; color: var(--text-dim); }
+  .result-item.highlight { border-color: rgba(0,255,136,0.3); }
+  .result-item.highlight .r-value { color: var(--accent2); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer;
+    font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #0099bb);
+    color: var(--bg); box-shadow: 0 4px 15px rgba(0,212,255,0.2);
+  }
+  .btn-primary:hover { box-shadow: 0 4px 25px rgba(0,212,255,0.4); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-success {
+    background: linear-gradient(135deg, var(--accent2), #00bb66);
+    color: var(--bg); box-shadow: 0 4px 15px rgba(0,255,136,0.2);
+  }
+  .btn-success:hover { box-shadow: 0 4px 25px rgba(0,255,136,0.4); transform: translateY(-1px); }
+  .btn-danger {
+    background: rgba(255,107,53,0.1); color: var(--accent3);
+    border: 1px solid rgba(255,107,53,0.3);
+  }
+  .btn-outline {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-sm { padding: 7px 14px; font-size: 0.75rem; width: auto; }
+
+  /* API KEY SETUP */
+  .api-setup {
+    background: rgba(255,204,0,0.05); border: 1px solid rgba(255,204,0,0.2);
+    border-radius: 8px; padding: 16px; margin-bottom: 16px;
+  }
+  .api-setup-title {
+    font-family: var(--font-display); font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 2px; color: var(--warn); margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .api-setup p { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.5; }
+
+  /* HISTORY TABLE */
+  .history-controls {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .history-controls .btn { width: auto; flex: 1; min-width: 120px; }
+
+  .table-wrap { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border); }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--font-mono); font-size: 0.72rem;
+  }
+  th {
+    background: var(--surface2); color: var(--accent);
+    padding: 10px 8px; text-align: left; letter-spacing: 1px;
+    font-size: 0.6rem; text-transform: uppercase; white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 8px; border-bottom: 1px solid rgba(30,45,74,0.5);
+    color: var(--text); white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,212,255,0.03); }
+  td.num { color: var(--accent2); font-weight: 600; }
+  .del-btn {
+    background: none; border: none; color: var(--accent3);
+    cursor: pointer; padding: 2px 6px; font-size: 0.85rem;
+    opacity: 0.5; transition: opacity 0.2s;
+  }
+  .del-btn:hover { opacity: 1; }
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; text-align: center;
+  }
+  .stat-card .s-label {
+    font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .stat-card .s-value {
+    font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-card .s-unit { font-size: 0.75rem; color: var(--text-dim); }
+
+  /* CHART */
+  .chart-container { position: relative; height: 200px; margin-top: 10px; }
+  canvas { width: 100% !important; }
+
+  /* TOGGLE */
+  .toggle-group {
+    display: flex; background: #f0f4f8; border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden; margin-bottom: 12px;
+  }
+  .toggle-group button {
+    flex: 1; padding: 9px; background: none; border: none;
+    color: var(--text-dim); cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 1px;
+    text-transform: uppercase; transition: all 0.15s;
+  }
+  .toggle-group button.active {
+    background: rgba(0,212,255,0.1); color: var(--accent);
+  }
+
+  /* MISC */
+  .divider {
+    border: none; border-top: 1px solid var(--border); margin: 14px 0;
+  }
+  .hint {
+    font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
+    margin-top: 5px; line-height: 1.4;
+  }
+  .badge {
+    display: inline-block; padding: 2px 7px; border-radius: 3px;
+    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 1px;
+    background: rgba(0,212,255,0.1); color: var(--accent);
+    text-transform: uppercase;
+  }
+  .mt8 { margin-top: 8px; }
+  .mb0 { margin-bottom: 0; }
+
+  /* Notification toast */
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #ffffff; border: 1px solid var(--accent2);
+    color: var(--accent2); padding: 10px 20px; border-radius: 6px;
+    font-family: var(--font-mono); font-size: 0.75rem;
+    transition: transform 0.3s; z-index: 999; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">EV<span>·</span>LOG</div>
+  <div class="api-indicator">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiLabel">NO API KEY</span>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('entry')">⚡ Eintrag</button>
+  <button onclick="showPage('history')">📋 Verlauf</button>
+  <button onclick="showPage('stats')">📊 Statistik</button>
+  <button onclick="showPage('settings')">⚙ Settings</button>
+</nav>
+
+<div id="toast"></div>
+
+<!-- ===== ENTRY PAGE ===== -->
+<div id="page-entry" class="page active">
+
+  <!-- API Key Warning -->
+  <div class="api-setup" id="apiSetupHint" style="display:none">
+    <div class="api-setup-title">⚠ API Key benötigt</div>
+    <p>Für die automatische Foto-Erkennung benötigst du einen Anthropic API Key. Gehe zu <strong>Settings</strong> und trage ihn ein. Manuelle Eingabe funktioniert auch ohne Key.</p>
+  </div>
+
+  <!-- DATE -->
+  <div class="card">
+    <div class="card-title"><div class="step-badge">1</div> Datum & Notiz</div>
+    <div class="row2">
+      <div class="field mb0">
+        <label>Datum</label>
+        <input type="date" id="entryDate">
+      </div>
+      <div class="field mb0">
+        <label>Notiz (optional)</label>
+        <input type="text" id="entryNote" placeholder="z.B. Autobahn">
+      </div>
+    </div>
+  </div>
+
+  <!-- BEFORE PHOTO -->
+  <div class="card">
+    <div class="card-title"><div class="step-badge">2</div> Armaturenbrett VOR dem Laden</div>
+
+    <div class="photo-zone" id="zoneA" onclick="triggerFile('fileA')">
+      <input type="file" id="fileA" accept="image/*" onchange="handlePhoto('A', this)">
+      <div id="zoneA-placeholder">
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-text">FOTO WÄHLEN / AUFNEHMEN</div>
+      </div>
+      <img id="previewA" class="photo-preview" alt="">
+    </div>
+
+    <div class="ai-status" id="statusA" style="display:none"></div>
+
+    <div class="extracted" id="extractedA" style="display:none">
+      <div class="extracted-val">
+        <div class="ev-label">km-Stand vorher</div>
+        <div class="ev-value" id="kmA">—</div>
+      </div>
+      <div class="extracted-val">
+        <div class="ev-label">Ladestand vorher</div>
+        <div class="ev-value" id="socA">—</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">oder manuell:</div>
+    <div class="row2">
+      <div class="field mb0">
+        <label>km-Stand vorher</label>
+        <input type="number" id="km_before" placeholder="37723" step="1">
+      </div>
+      <div class="field mb0">
+        <label>Ladestand vorher (%)</label>
+        <input type="number" id="soc_before" placeholder="18.75" step="0.1" min="0" max="100">
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER PHOTO -->
+  <div class="card">
+    <div class="card-title"><div class="step-badge">3</div> Armaturenbrett NACH dem Laden</div>
+
+    <div class="photo-zone" id="zoneB" onclick="triggerFile('fileB')">
+      <input type="file" id="fileB" accept="image/*" onchange="handlePhoto('B', this)">
+      <div id="zoneB-placeholder">
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-text">FOTO WÄHLEN / AUFNEHMEN</div>
+      </div>
+      <img id="previewB" class="photo-preview" alt="">
+    </div>
+
+    <div class="ai-status" id="statusB" style="display:none"></div>
+
+    <div class="extracted" id="extractedB" style="display:none">
+      <div class="extracted-val">
+        <div class="ev-label">km-Stand nachher</div>
+        <div class="ev-value" id="kmB">—</div>
+      </div>
+      <div class="extracted-val">
+        <div class="ev-label">Ladestand nachher</div>
+        <div class="ev-value" id="socB">—</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">oder manuell:</div>
+    <div class="row2">
+      <div class="field mb0">
+        <label>km-Stand nachher</label>
+        <input type="number" id="km_after" placeholder="38120" step="1">
+      </div>
+      <div class="field mb0">
+        <label>Ladestand nachher (%)</label>
+        <input type="number" id="soc_after" placeholder="80" step="0.1" min="0" max="100">
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGING STATION -->
+  <div class="card">
+    <div class="card-title"><div class="step-badge">4</div> Ladesäule – geladene kWh</div>
+
+    <div class="toggle-group">
+      <button class="active" id="btnPhotoC" onclick="setChargeMode('photo')">📷 Foto</button>
+      <button id="btnManualC" onclick="setChargeMode('manual')">✏ Manuell</button>
+    </div>
+
+    <div id="chargeModePhoto">
+      <div class="photo-zone" id="zoneC" onclick="triggerFile('fileC')">
+        <input type="file" id="fileC" accept="image/*" onchange="handlePhoto('C', this)">
+        <div id="zoneC-placeholder">
+          <div class="photo-zone-icon">⚡</div>
+          <div class="photo-zone-text">LADESÄULEN-DISPLAY FOTOGRAFIEREN</div>
+        </div>
+        <img id="previewC" class="photo-preview" alt="">
+      </div>
+      <div class="ai-status" id="statusC" style="display:none"></div>
+      <div class="extracted" id="extractedC" style="display:none">
+        <div class="extracted-val">
+          <div class="ev-label">Geladen</div>
+          <div class="ev-value" id="kwh_extracted">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="chargeModeManual" style="display:none">
+      <div class="field mb0">
+        <label>Geladene kWh</label>
+        <input type="number" id="kwh_manual" placeholder="22.5" step="0.01" min="0">
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="field mb0">
+      <label>Geladene kWh (Endwert – editierbar)</label>
+      <input type="number" id="kwh_final" placeholder="wird automatisch befüllt" step="0.01" min="0">
+    </div>
+  </div>
+
+  <!-- RESULTS PREVIEW -->
+  <div class="card" id="resultsCard" style="display:none">
+    <div class="card-title">🔋 Berechnete Werte</div>
+    <div class="result-grid">
+      <div class="result-item highlight">
+        <div class="r-label">Verbrauch (km-Delta)</div>
+        <div class="r-value" id="res_consumption_km">—</div>
+        <div class="r-unit">kWh/100km</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">Verbrauch (Trip)</div>
+        <div class="r-value" id="res_consumption_trip">—</div>
+        <div class="r-unit">kWh/100km</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">Δ km gefahren</div>
+        <div class="r-value" id="res_delta_km">—</div>
+        <div class="r-unit">km</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">Δ Ladestand</div>
+        <div class="r-value" id="res_delta_soc">—</div>
+        <div class="r-unit">%</div>
+      </div>
+      <div class="result-item highlight" style="grid-column:1/-1">
+        <div class="r-label">Theoretische Batteriekapazität</div>
+        <div class="r-value" id="res_capacity">—</div>
+        <div class="r-unit">kWh</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVE -->
+  <button class="btn btn-success" onclick="calculate(); saveEntry()">💾 Berechnen & Speichern</button>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ===== HISTORY PAGE ===== -->
+<div id="page-history" class="page">
+  <div class="history-controls">
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV Export</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 Alle löschen</button>
+  </div>
+  <div class="table-wrap" id="historyWrap">
+    <div class="empty-state">Noch keine Einträge vorhanden.</div>
+  </div>
+</div>
+
+<!-- ===== STATS PAGE ===== -->
+<div id="page-stats" class="page">
+  <div id="statsContent">
+    <div class="empty-state">Noch keine Daten für Statistiken.</div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS PAGE ===== -->
+<div id="page-settings" class="page">
+  <div class="card">
+    <div class="card-title">🔑 Anthropic API Key</div>
+    <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:12px; line-height:1.5;">
+      Für die automatische Foto-Erkennung (Armaturenbrett + Ladesäule) wird ein Anthropic API Key benötigt.
+      Erhältlich unter <strong style="color:var(--accent)">console.anthropic.com</strong>.
+      Der Key wird nur lokal im Browser gespeichert (localStorage).
+    </p>
+    <div class="field">
+      <label>API Key</label>
+      <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+    </div>
+    <button class="btn btn-primary" onclick="saveApiKey()">Speichern</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🚗 Fahrzeug</div>
+    <div class="row2">
+      <div class="field mb0">
+        <label>Fahrzeug-Name</label>
+        <input type="text" id="vehicleName" placeholder="z.B. VW e-up!">
+      </div>
+      <div class="field mb0">
+        <label>Nominale Kapazität (kWh)</label>
+        <input type="number" id="nomCapacity" placeholder="36.8" step="0.1">
+      </div>
+    </div>
+    <div class="mt8">
+      <button class="btn btn-primary" onclick="saveVehicle()">Speichern</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ℹ Info</div>
+    <p style="font-size:0.75rem; color:var(--text-dim); line-height:1.6;">
+      <strong style="color:var(--text)">EV·LOG</strong> v1.0<br>
+      Alle Daten werden lokal im Browser gespeichert.<br>
+      CSV-Export für Weiterverarbeitung (z.B. R/Shiny).<br>
+      Foto-Erkennung via Claude Vision API.
+    </p>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let apiKey = localStorage.getItem('ev_apikey') || '';
+let entries = JSON.parse(localStorage.getItem('ev_entries') || '[]');
+let vehicle = JSON.parse(localStorage.getItem('ev_vehicle') || '{"name":"","capacity":""}');
+let chargeMode = 'photo';
+let extractedData = { A: {}, B: {}, C: {} };
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('entryDate').value = today();
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('vehicleName').value = vehicle.name;
+  document.getElementById('nomCapacity').value = vehicle.capacity;
+  updateApiIndicator();
+  renderHistory();
+  renderStats();
+  if (!apiKey) document.getElementById('apiSetupHint').style.display = 'block';
+});
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ===== NAVIGATION =====
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') renderHistory();
+  if (name === 'stats') renderStats();
+}
+
+// ===== API KEY =====
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('ev_apikey', apiKey);
+  updateApiIndicator();
+  if (apiKey) {
+    document.getElementById('apiSetupHint').style.display = 'none';
+    showToast('API Key gespeichert ✓');
+  }
+}
+function saveVehicle() {
+  vehicle = {
+    name: document.getElementById('vehicleName').value,
+    capacity: document.getElementById('nomCapacity').value
+  };
+  localStorage.setItem('ev_vehicle', JSON.stringify(vehicle));
+  showToast('Fahrzeug gespeichert ✓');
+}
+function updateApiIndicator() {
+  const dot = document.getElementById('apiDot');
+  const lbl = document.getElementById('apiLabel');
+  if (apiKey) {
+    dot.className = 'api-dot ok';
+    lbl.textContent = 'API BEREIT';
+  } else {
+    dot.className = 'api-dot err';
+    lbl.textContent = 'KEIN API KEY';
+  }
+}
+
+// ===== PHOTO HANDLING =====
+function triggerFile(id) {
+  // click is handled by the input's position:absolute
+}
+
+async function handlePhoto(slot, input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const zone = document.getElementById('zone' + slot);
+  const preview = document.getElementById('preview' + slot);
+  const placeholder = document.getElementById('zone' + slot + '-placeholder');
+
+  // Show preview
+  const url = URL.createObjectURL(file);
+  preview.src = url;
+  preview.classList.add('visible');
+  if (placeholder) placeholder.style.display = 'none';
+  zone.classList.add('has-image');
+
+  if (!apiKey) {
+    setStatus(slot, 'error', 'Kein API Key – bitte manuell eingeben');
+    return;
+  }
+
+  setStatus(slot, 'loading', 'KI analysiert Bild…');
+
+  try {
+    const b64 = await toBase64(file);
+    const result = await analyzeImage(slot, b64, file.type);
+    applyExtracted(slot, result);
+  } catch (e) {
+    setStatus(slot, 'error', 'Fehler: ' + e.message);
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function analyzeImage(slot, b64, mimeType) {
+  let prompt;
+  if (slot === 'A' || slot === 'B') {
+    prompt = `Du analysierst ein Foto eines Elektroauto-Armaturenbretts.
+
+Extrahiere folgende Werte und antworte NUR mit JSON, ohne Erklärungen:
+{
+  "km": <Gesamtkilometerstand als Zahl, z.B. 37723>,
+  "soc": <Ladestand in Prozent als Dezimalzahl, z.B. 18.75>,
+  "trip": <Tripcounter-Wert als Zahl oder null wenn nicht sichtbar>,
+  "confidence": <"high"|"medium"|"low">
+}
+
+Wichtige Hinweise zur Ladestandanzeige (runde Skala):
+- Die Skala hat Markierungen bei 0, 1/4 (25%), 1/2 (50%), 3/4 (75%), 1/1 (100%)
+- Zwischen den Markierungen gibt es kleine Teilstriche (je 4 Teilstriche = je 6,25%)
+- Lies den Winkel der Nadel sehr genau ab und interpoliere entsprechend
+- Beispiel: Nadel einen Teilstrich unter 1/4 = 25% - 6.25% = 18.75%
+- Gib den Wert als Prozentzahl an (0-100)`;
+  } else {
+    prompt = `Du analysierst ein Foto eines Ladesäulen-Displays.
+
+Extrahiere die geladene Energiemenge in kWh und antworte NUR mit JSON:
+{
+  "kwh": <geladene kWh als Dezimalzahl, z.B. 22.5>,
+  "currency": <Betrag in CHF/EUR als Zahl oder null>,
+  "confidence": <"high"|"medium"|"low">
+}
+
+Hinweise:
+- Suche nach Werten mit Einheit "kWh", "kW·h", "Energie", "Energy"
+- Es gibt ca. 6 verschiedene Display-Formate, sei flexibel
+- Falls kein kWh-Wert erkennbar: kwh: null`;
+  }
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mimeType, data: b64 } },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || resp.statusText);
+  }
+
+  const data = await resp.json();
+  const text = data.content.map(c => c.text || '').join('');
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+function applyExtracted(slot, data) {
+  extractedData[slot] = data;
+
+  if (slot === 'A') {
+    setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% | Trip: ${data.trip ?? '—'} km [${data.confidence}]`);
+    document.getElementById('extractedA').style.display = 'flex';
+    document.getElementById('kmA').textContent = data.km ?? '?';
+    document.getElementById('socA').textContent = (data.soc ?? '?') + '%';
+    if (data.km != null) document.getElementById('km_before').value = data.km;
+    if (data.soc != null) document.getElementById('soc_before').value = data.soc;
+    // Trip counter
+    if (data.trip != null) document.getElementById('entryNote').placeholder = 'Trip: ' + data.trip + ' km';
+  } else if (slot === 'B') {
+    setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% [${data.confidence}]`);
+    document.getElementById('extractedB').style.display = 'flex';
+    document.getElementById('kmB').textContent = data.km ?? '?';
+    document.getElementById('socB').textContent = (data.soc ?? '?') + '%';
+    if (data.km != null) document.getElementById('km_after').value = data.km;
+    if (data.soc != null) document.getElementById('soc_after').value = data.soc;
+  } else if (slot === 'C') {
+    if (data.kwh != null) {
+      setStatus(slot, 'success', `Erkannt – ${data.kwh} kWh${data.currency ? ' | ' + data.currency + ' CHF' : ''} [${data.confidence}]`);
+      document.getElementById('extractedC').style.display = 'flex';
+      document.getElementById('kwh_extracted').textContent = data.kwh + ' kWh';
+      document.getElementById('kwh_final').value = data.kwh;
+    } else {
+      setStatus(slot, 'error', 'Kein kWh-Wert erkannt – bitte manuell eingeben');
+    }
+  }
+}
+
+function setStatus(slot, type, msg) {
+  const el = document.getElementById('status' + slot);
+  el.style.display = 'flex';
+  el.className = 'ai-status ' + type;
+  el.innerHTML = type === 'loading'
+    ? `<div class="spinner"></div><span>${msg}</span>`
+    : `<span>${msg}</span>`;
+}
+
+// ===== CHARGE MODE =====
+function setChargeMode(mode) {
+  chargeMode = mode;
+  document.getElementById('chargeModePhoto').style.display = mode === 'photo' ? 'block' : 'none';
+  document.getElementById('chargeModeManual').style.display = mode === 'manual' ? 'block' : 'none';
+  document.getElementById('btnPhotoC').classList.toggle('active', mode === 'photo');
+  document.getElementById('btnManualC').classList.toggle('active', mode === 'manual');
+}
+
+// ===== CALCULATE =====
+function getNum(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? null : v;
+}
+
+function calculate() {
+  const kmBefore = getNum('km_before');
+  const kmAfter = getNum('km_after');
+  const socBefore = getNum('soc_before');
+  const socAfter = getNum('soc_after');
+  const kwh = chargeMode === 'manual' ? getNum('kwh_manual') : getNum('kwh_final');
+
+  const deltaKm = (kmBefore != null && kmAfter != null) ? kmAfter - kmBefore : null;
+  const deltaSoc = (socBefore != null && socAfter != null) ? socAfter - socBefore : null;
+
+  let consumptionKm = null, capacity = null;
+  if (deltaKm != null && deltaKm > 0 && kwh != null) {
+    consumptionKm = (kwh / deltaKm * 100).toFixed(2);
+  }
+
+  // Trip-based consumption
+  let consumptionTrip = null;
+  const trip = extractedData.A?.trip;
+  if (trip && trip > 0 && kwh != null) {
+    consumptionTrip = (kwh / trip * 100).toFixed(2);
+  }
+
+  if (deltaSoc != null && deltaSoc > 0 && kwh != null) {
+    capacity = (kwh / (deltaSoc / 100)).toFixed(1);
+  }
+
+  document.getElementById('res_consumption_km').textContent = consumptionKm ?? '—';
+  document.getElementById('res_consumption_trip').textContent = consumptionTrip ?? '—';
+  document.getElementById('res_delta_km').textContent = deltaKm != null ? deltaKm : '—';
+  document.getElementById('res_delta_soc').textContent = deltaSoc != null ? deltaSoc.toFixed(2) : '—';
+  document.getElementById('res_capacity').textContent = capacity ? capacity + ' kWh' : '—';
+  document.getElementById('resultsCard').style.display = 'block';
+
+  return { kmBefore, kmAfter, socBefore, socAfter, kwh, deltaKm, deltaSoc, consumptionKm, consumptionTrip, capacity };
+}
+
+function saveEntry() {
+  const vals = calculate();
+  if (!vals.kmBefore && !vals.kwh) {
+    showToast('Bitte mindestens km-Stand und kWh eingeben');
+    return;
+  }
+
+  const entry = {
+    id: Date.now(),
+    date: document.getElementById('entryDate').value,
+    note: document.getElementById('entryNote').value,
+    km_before: vals.kmBefore,
+    km_after: vals.kmAfter,
+    soc_before: vals.socBefore,
+    soc_after: vals.socAfter,
+    kwh: vals.kwh,
+    delta_km: vals.deltaKm,
+    delta_soc: vals.deltaSoc,
+    consumption_km: vals.consumptionKm,
+    consumption_trip: vals.consumptionTrip,
+    capacity: vals.capacity
+  };
+
+  entries.unshift(entry);
+  localStorage.setItem('ev_entries', JSON.stringify(entries));
+  showToast('Eintrag gespeichert ✓');
+  resetForm();
+}
+
+function resetForm() {
+  ['km_before','km_after','soc_before','soc_after','kwh_final','kwh_manual'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('entryNote').value = '';
+  document.getElementById('entryDate').value = today();
+  ['A','B','C'].forEach(s => {
+    const prev = document.getElementById('preview' + s);
+    if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+    const ph = document.getElementById('zone' + s + '-placeholder');
+    if (ph) ph.style.display = '';
+    const zone = document.getElementById('zone' + s);
+    if (zone) zone.classList.remove('has-image');
+    const st = document.getElementById('status' + s);
+    if (st) st.style.display = 'none';
+    const ex = document.getElementById('extracted' + s);
+    if (ex) ex.style.display = 'none';
+    const fi = document.getElementById('file' + s);
+    if (fi) fi.value = '';
+  });
+  extractedData = { A: {}, B: {}, C: {} };
+  document.getElementById('resultsCard').style.display = 'none';
+}
+
+// ===== HISTORY =====
+function renderHistory() {
+  const wrap = document.getElementById('historyWrap');
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="empty-state">Noch keine Einträge vorhanden.</div>';
+    return;
+  }
+
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Datum</th><th>km vorher</th><th>km nachher</th>
+      <th>SoC vor</th><th>SoC nach</th><th>kWh</th>
+      <th>Δkm</th><th>kWh/100km</th><th>Kapazität</th><th>Notiz</th><th></th>
+    </tr></thead>
+    <tbody>
+    ${entries.map(e => `<tr>
+      <td>${e.date}</td>
+      <td class="num">${e.km_before ?? '—'}</td>
+      <td class="num">${e.km_after ?? '—'}</td>
+      <td>${e.soc_before != null ? e.soc_before + '%' : '—'}</td>
+      <td>${e.soc_after != null ? e.soc_after + '%' : '—'}</td>
+      <td class="num">${e.kwh ?? '—'}</td>
+      <td>${e.delta_km ?? '—'}</td>
+      <td class="num">${e.consumption_km ?? '—'}</td>
+      <td class="num">${e.capacity ? e.capacity + ' kWh' : '—'}</td>
+      <td>${e.note || ''}</td>
+      <td><button class="del-btn" onclick="deleteEntry(${e.id})">✕</button></td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  localStorage.setItem('ev_entries', JSON.stringify(entries));
+  renderHistory();
+}
+
+function clearAll() {
+  if (!confirm('Alle Einträge löschen?')) return;
+  entries = [];
+  localStorage.setItem('ev_entries', JSON.stringify(entries));
+  renderHistory();
+  renderStats();
+}
+
+function exportCSV() {
+  if (!entries.length) { showToast('Keine Daten zum Exportieren'); return; }
+  const header = 'Datum,km_vorher,km_nachher,soc_vorher_%,soc_nachher_%,kWh,delta_km,kWh_100km_delta,kWh_100km_trip,kapazitaet_kWh,notiz';
+  const rows = entries.map(e =>
+    [e.date, e.km_before, e.km_after, e.soc_before, e.soc_after, e.kwh,
+     e.delta_km, e.consumption_km, e.consumption_trip, e.capacity,
+     '"' + (e.note || '').replace(/"/g, '""') + '"'].join(',')
+  );
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ev_log_' + today() + '.csv';
+  a.click();
+  showToast('CSV exportiert ✓');
+}
+
+// ===== STATS =====
+function renderStats() {
+  const container = document.getElementById('statsContent');
+  const valid = entries.filter(e => e.consumption_km != null);
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-state">Noch keine Daten für Statistiken.</div>';
+    return;
+  }
+
+  const consumptions = valid.map(e => parseFloat(e.consumption_km)).filter(v => !isNaN(v));
+  const capacities = entries.filter(e => e.capacity).map(e => parseFloat(e.capacity));
+  const totalKwh = entries.reduce((s, e) => s + (e.kwh || 0), 0);
+  const totalKm = entries.reduce((s, e) => s + (e.delta_km || 0), 0);
+  const avgConsumption = consumptions.length ? (consumptions.reduce((a,b)=>a+b,0)/consumptions.length).toFixed(2) : '—';
+  const avgCapacity = capacities.length ? (capacities.reduce((a,b)=>a+b,0)/capacities.length).toFixed(1) : '—';
+  const minCap = capacities.length ? Math.min(...capacities).toFixed(1) : '—';
+  const maxCap = capacities.length ? Math.max(...capacities).toFixed(1) : '—';
+
+  container.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="s-label">Ø Verbrauch</div>
+        <div class="s-value">${avgConsumption}</div>
+        <div class="s-unit">kWh/100km</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Ø Kapazität</div>
+        <div class="s-value">${avgCapacity}</div>
+        <div class="s-unit">kWh</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Total geladen</div>
+        <div class="s-value">${totalKwh.toFixed(1)}</div>
+        <div class="s-unit">kWh</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Total gefahren</div>
+        <div class="s-value">${totalKm}</div>
+        <div class="s-unit">km</div>
+      </div>
+    </div>
+
+    ${capacities.length >= 2 ? `
+    <div class="card">
+      <div class="card-title">🔋 Batteriekapazität-Verlauf</div>
+      <p style="font-size:0.72rem; color:var(--text-dim); margin-bottom:8px;">
+        Min: ${minCap} kWh | Max: ${maxCap} kWh | Ø: ${avgCapacity} kWh
+        ${vehicle.capacity ? ' | Nominell: ' + vehicle.capacity + ' kWh' : ''}
+      </p>
+      <div class="chart-container">
+        <canvas id="chartCap"></canvas>
+      </div>
+    </div>` : ''}
+
+    ${consumptions.length >= 2 ? `
+    <div class="card">
+      <div class="card-title">⚡ Verbrauch-Verlauf (kWh/100km)</div>
+      <div class="chart-container">
+        <canvas id="chartCons"></canvas>
+      </div>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-title">📋 Alle Einträge</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Datum</th><th>kWh/100km</th><th>Kapazität</th><th>Δkm</th><th>kWh</th></tr></thead>
+          <tbody>
+          ${[...entries].reverse().map(e => `<tr>
+            <td>${e.date}</td>
+            <td class="num">${e.consumption_km ?? '—'}</td>
+            <td class="num">${e.capacity ? e.capacity + ' kWh' : '—'}</td>
+            <td>${e.delta_km ?? '—'}</td>
+            <td>${e.kwh ?? '—'}</td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Draw charts
+  setTimeout(() => {
+    drawChart('chartCap', [...entries].reverse().filter(e => e.capacity),
+      e => e.date, e => parseFloat(e.capacity),
+      'Kapazität (kWh)', 'rgba(0,153,110,0.9)', vehicle.capacity ? parseFloat(vehicle.capacity) : null);
+    drawChart('chartCons', [...entries].reverse().filter(e => e.consumption_km),
+      e => e.date, e => parseFloat(e.consumption_km),
+      'kWh/100km', 'rgba(0,119,204,0.9)', null);
+  }, 50);
+}
+
+function drawChart(canvasId, data, labelFn, valueFn, yLabel, color, nomLine) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || data.length < 2) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.parentElement.clientWidth;
+  const h = 200;
+  canvas.width = w; canvas.height = h;
+
+  const values = data.map(valueFn);
+  const labels = data.map(labelFn);
+  const minV = Math.min(...values) * 0.95;
+  const maxV = Math.max(...values) * 1.05;
+  const pad = { l: 40, r: 10, t: 10, b: 30 };
+  const chartW = w - pad.l - pad.r;
+  const chartH = h - pad.t - pad.b;
+
+  const xPos = i => pad.l + (i / (values.length - 1)) * chartW;
+  const yPos = v => pad.t + chartH - ((v - minV) / (maxV - minV)) * chartH;
+
+  // Background
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = '#ccd8e8'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    const val = maxV - (i / 4) * (maxV - minV);
+    ctx.fillStyle = '#7a90a8'; ctx.font = '10px Share Tech Mono';
+    ctx.fillText(val.toFixed(1), 0, y + 4);
+  }
+
+  // Nominal line
+  if (nomLine) {
+    const y = yPos(nomLine);
+    ctx.strokeStyle = 'rgba(255,204,0,0.4)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Area fill
+  const gradient = ctx.createLinearGradient(0, pad.t, 0, h);
+  gradient.addColorStop(0, color.replace('0.8)', '0.3)'));
+  gradient.addColorStop(1, color.replace('0.8)', '0.0)'));
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(values[0]));
+  values.forEach((v, i) => { if (i > 0) ctx.lineTo(xPos(i), yPos(v)); });
+  ctx.lineTo(xPos(values.length - 1), h - pad.b);
+  ctx.lineTo(xPos(0), h - pad.b);
+  ctx.closePath();
+  ctx.fillStyle = gradient; ctx.fill();
+
+  // Line
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([]);
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v));
+  });
+  ctx.stroke();
+
+  // Points
+  values.forEach((v, i) => {
+    ctx.beginPath();
+    ctx.arc(xPos(i), yPos(v), 3, 0, Math.PI * 2);
+    ctx.fillStyle = color; ctx.fill();
+  });
+
+  // X labels (first and last)
+  ctx.fillStyle = '#7a90a8'; ctx.font = '9px Share Tech Mono';
+  ctx.fillText(labels[0], pad.l, h - 5);
+  const last = labels[labels.length - 1];
+  ctx.fillText(last, w - pad.r - ctx.measureText(last).width, h - 5);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
