@@ -408,13 +408,13 @@
     </div>
   </div>
 
-  <!-- CURRENT DASHBOARD PHOTO -->
+  <!-- STEP 2: BEFORE CHARGING -->
   <div class="card">
-    <div class="card-title"><div class="step-badge">2</div> Armaturenbrett – aktueller Stand (vor dem Laden)</div>
+    <div class="card-title"><div class="step-badge">2</div> Armaturenbrett VOR dem Laden</div>
 
-    <!-- Previous entry info -->
+    <!-- Auto km from last entry -->
     <div id="prevEntryInfo" style="display:none; margin-bottom:12px; padding:10px 12px; background:#f0f7ff; border:1px solid #ccd8e8; border-radius:6px;">
-      <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Letzter Eintrag (km-Stand vorher automatisch)</div>
+      <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">km-Stand vorher – automatisch vom letzten Eintrag</div>
       <div style="font-family:var(--font-display); font-size:1rem; font-weight:600; color:var(--accent);" id="prevEntryText">—</div>
     </div>
 
@@ -422,52 +422,57 @@
       <input type="file" id="fileA" accept="image/*" onchange="handlePhoto('A', this)">
       <div id="zoneA-placeholder">
         <div class="photo-zone-icon">📷</div>
-        <div class="photo-zone-text">FOTO WÄHLEN / AUFNEHMEN</div>
+        <div class="photo-zone-text">FOTO VOR DEM LADEN</div>
       </div>
       <img id="previewA" class="photo-preview" alt="">
     </div>
-
     <div class="ai-status" id="statusA" style="display:none"></div>
 
-    <div class="extracted" id="extractedA" style="display:none">
-      <div class="extracted-val">
-        <div class="ev-label">km-Stand aktuell</div>
-        <div class="ev-value" id="kmA">—</div>
-      </div>
-      <div class="extracted-val">
-        <div class="ev-label">Ladestand aktuell</div>
-        <div class="ev-value" id="socA">—</div>
-      </div>
-    </div>
-
     <hr class="divider">
-    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">manuell / korrigieren:</div>
+
+    <!-- km fields -->
     <div class="row2">
       <div class="field mb0">
-        <label>km-Stand vorher (auto)</label>
-        <input type="number" id="km_before" placeholder="vom letzten Eintrag" step="1" readonly>
+        <label>km-Stand vorher (auto / editierbar)</label>
+        <input type="number" id="km_before" placeholder="letzter Eintrag" step="1">
       </div>
       <div class="field mb0">
-        <label>km-Stand aktuell</label>
-        <input type="number" id="km_after" placeholder="37723" step="1">
+        <label>km-Stand aktuell (aus Foto / editierbar)</label>
+        <input type="number" id="km_after" placeholder="z.B. 37723" step="1">
       </div>
     </div>
-    <div class="row2" style="margin-top:10px;">
-      <div class="field mb0">
-        <label>Ladestand vorher % (auto)</label>
-        <input type="number" id="soc_before" placeholder="vom letzten Eintrag" step="0.1" min="0" max="100" readonly>
-      </div>
-      <div class="field mb0">
-        <label>Ladestand aktuell (%)</label>
-        <input type="number" id="soc_after" placeholder="18.75" step="0.1" min="0" max="100">
-      </div>
+
+    <!-- SoC before: single field, filled by AI or dropdown, editable -->
+    <div class="field" style="margin-top:10px; margin-bottom:4px;">
+      <label>Ladestand vor dem Laden % – KI, Schnellwahl oder Tastatur</label>
+      <input type="number" id="soc_before" placeholder="KI oder Schnellwahl auswählen…" step="0.01" min="0" max="100">
     </div>
-    <p class="hint" style="margin-top:8px;">⚠ km-Stand vorher und Ladestand vorher stammen automatisch vom letzten gespeicherten Eintrag. Beim ersten Eintrag bitte manuell eingeben (Feld anklicken zum Entsperren).</p>
+    <select onchange="if(this.value !== '') { document.getElementById('soc_before').value=this.value; this.value=''; }">
+      <option value="">⬆ Schnellwahl SoC vorher</option>
+      <option value="0">0%</option>
+      <option value="6.25">6,25% (1 Strich)</option>
+      <option value="12.5">12,5% (2 Striche)</option>
+      <option value="18.75">18,75% (3 Striche)</option>
+      <option value="25">25% = 1/4</option>
+      <option value="31.25">31,25%</option>
+      <option value="37.5">37,5%</option>
+      <option value="43.75">43,75%</option>
+      <option value="50">50% = 1/2</option>
+      <option value="56.25">56,25%</option>
+      <option value="62.5">62,5%</option>
+      <option value="68.75">68,75%</option>
+      <option value="75">75% = 3/4</option>
+      <option value="81.25">81,25%</option>
+      <option value="87.5">87,5%</option>
+      <option value="93.75">93,75%</option>
+      <option value="100">100% = 1/1</option>
+    </select>
+    <p class="hint" style="margin-top:6px;">KI befüllt das Feld automatisch. Schnellwahl oder Tastatur überschreibt jederzeit.</p>
   </div>
 
-  <!-- AFTER CHARGING PHOTO -->
+  <!-- STEP 3: AFTER CHARGING -->
   <div class="card">
-    <div class="card-title"><div class="step-badge">3</div> Armaturenbrett NACH dem Laden – Ladestand</div>
+    <div class="card-title"><div class="step-badge">3</div> Armaturenbrett NACH dem Laden</div>
 
     <div class="photo-zone" id="zoneB" onclick="triggerFile('fileB')">
       <input type="file" id="fileB" accept="image/*" onchange="handlePhoto('B', this)">
@@ -477,22 +482,36 @@
       </div>
       <img id="previewB" class="photo-preview" alt="">
     </div>
-
     <div class="ai-status" id="statusB" style="display:none"></div>
 
-    <div class="extracted" id="extractedB" style="display:none">
-      <div class="extracted-val">
-        <div class="ev-label">Ladestand nachher</div>
-        <div class="ev-value" id="socB">—</div>
-      </div>
-    </div>
-
     <hr class="divider">
-    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">manuell / korrigieren:</div>
-    <div class="field mb0">
-      <label>Ladestand nach dem Laden (%)</label>
-      <input type="number" id="soc_after" placeholder="80" step="0.1" min="0" max="100">
+
+    <!-- SoC after: single field, filled by AI or dropdown, editable -->
+    <div class="field" style="margin-bottom:4px;">
+      <label>Ladestand nach dem Laden % – KI, Schnellwahl oder Tastatur</label>
+      <input type="number" id="soc_after" placeholder="KI oder Schnellwahl auswählen…" step="0.01" min="0" max="100">
     </div>
+    <select onchange="if(this.value !== '') { document.getElementById('soc_after').value=this.value; this.value=''; }">
+      <option value="">⬆ Schnellwahl SoC nachher</option>
+      <option value="0">0%</option>
+      <option value="6.25">6,25% (1 Strich)</option>
+      <option value="12.5">12,5% (2 Striche)</option>
+      <option value="18.75">18,75% (3 Striche)</option>
+      <option value="25">25% = 1/4</option>
+      <option value="31.25">31,25%</option>
+      <option value="37.5">37,5%</option>
+      <option value="43.75">43,75%</option>
+      <option value="50">50% = 1/2</option>
+      <option value="56.25">56,25%</option>
+      <option value="62.5">62,5%</option>
+      <option value="68.75">68,75%</option>
+      <option value="75">75% = 3/4</option>
+      <option value="81.25">81,25%</option>
+      <option value="87.5">87,5%</option>
+      <option value="93.75">93,75%</option>
+      <option value="100">100% = 1/1</option>
+    </select>
+    <p class="hint" style="margin-top:6px;">KI befüllt das Feld automatisch. Schnellwahl oder Tastatur überschreibt jederzeit.</p>
   </div>
 
   <!-- CHARGING STATION -->
@@ -648,33 +667,18 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHistory();
   renderStats();
   if (!apiKey) document.getElementById('apiSetupHint').style.display = 'block';
-  // Allow unlocking readonly fields on click
-  ['km_before','soc_before'].forEach(id => {
-    document.getElementById(id).addEventListener('click', function() {
-      this.removeAttribute('readonly');
-      this.style.color = '';
-      this.style.borderColor = '';
-    });
-  });
 });
 
 function loadPrevEntry() {
   if (!entries.length) return;
   const last = entries[0];
-  const kmBefore = document.getElementById('km_before');
-  const socBefore = document.getElementById('soc_before');
   if (last.km_after != null) {
-    kmBefore.value = last.km_after;
-    kmBefore.setAttribute('readonly', true);
-  }
-  if (last.soc_after != null) {
-    socBefore.value = last.soc_after;
-    socBefore.setAttribute('readonly', true);
+    document.getElementById('km_before').value = last.km_after;
   }
   const info = document.getElementById('prevEntryInfo');
   const txt = document.getElementById('prevEntryText');
   info.style.display = 'block';
-  txt.textContent = `${last.date}  |  ${last.km_after ?? '?'} km  |  SoC: ${last.soc_after ?? '?'}%`;
+  txt.textContent = `${last.date}  |  ${last.km_after ?? '?'} km`;
 }
 
 function today() {
@@ -778,12 +782,20 @@ Extrahiere folgende Werte und antworte NUR mit JSON, ohne Erklärungen:
   "confidence": <"high"|"medium"|"low">
 }
 
-Wichtige Hinweise zur Ladestandanzeige (runde Skala):
-- Die Skala hat Markierungen bei 0, 1/4 (25%), 1/2 (50%), 3/4 (75%), 1/1 (100%)
-- Zwischen den Markierungen gibt es kleine Teilstriche (je 4 Teilstriche = je 6,25%)
-- Lies den Winkel der Nadel sehr genau ab und interpoliere entsprechend
-- Beispiel: Nadel einen Teilstrich unter 1/4 = 25% - 6.25% = 18.75%
-- Gib den Wert als Prozentzahl an (0-100)`;
+Wichtige Hinweise zur Ladestandanzeige (runde Skala rechts im Bild):
+- Die Skala ist eine Halbkreis-Analoganzeige mit Nadel
+- Hauptmarkierungen: 0 (unten links), 1/4 (25%), 1/2 (50%), 3/4 (75%), 1/1 (100%, oben oder rechts)
+- Zwischen je zwei Hauptmarkierungen gibt es 4 kleine Teilstriche = je 6,25% pro Schritt
+- WICHTIG: Schau nicht auf die Beschriftungen, sondern auf den genauen WINKEL der Nadel
+- Bestimme zuerst: Zwischen welchen zwei Hauptmarkierungen steht die Nadel?
+- Dann: Wie viele Teilstriche ist sie von der unteren Hauptmarkierung entfernt?
+- Beispiele:
+  * Nadel genau auf 1/4 = 25%
+  * Nadel einen Teilstrich ÜBER 1/4 = 31,25%
+  * Nadel einen Teilstrich UNTER 1/4 = 18,75%
+  * Nadel zwischen 3/4 und 1/1, zwei Teilstriche über 3/4 = 87,5%
+  * Nadel knapp unter 1/1 = ca. 93-94%
+- Gib den Wert als Prozentzahl an (0-100), auf 6.25% gerundet`;
   } else {
     prompt = `Du analysierst ein Foto eines Ladesäulen-Displays.
 
