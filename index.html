@@ -670,14 +670,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadPrevEntry() {
-  if (!entries.length) return;
+  const info = document.getElementById('prevEntryInfo');
+  const txt = document.getElementById('prevEntryText');
+  if (!entries.length) {
+    info.style.display = 'block';
+    info.style.background = '#fff8e1';
+    info.style.borderColor = '#ffe082';
+    txt.style.color = 'var(--warn)';
+    txt.textContent = 'Erster Eintrag – kein Verbrauch berechenbar, nur km-Stand & Ladestand speichern';
+    return;
+  }
   const last = entries[0];
+  info.style.display = 'block';
+  info.style.background = '#f0f7ff';
+  info.style.borderColor = '#ccd8e8';
+  txt.style.color = 'var(--accent)';
   if (last.km_after != null) {
     document.getElementById('km_before').value = last.km_after;
   }
-  const info = document.getElementById('prevEntryInfo');
-  const txt = document.getElementById('prevEntryText');
-  info.style.display = 'block';
   txt.textContent = `${last.date}  |  ${last.km_after ?? '?'} km`;
 }
 
@@ -843,24 +853,21 @@ function applyExtracted(slot, data) {
   extractedData[slot] = data;
 
   if (slot === 'A') {
-    // Foto VOR dem Laden: km-Stand aktuell → km_after, SoC → soc_before
+    // Foto VOR dem Laden: km-Stand → km_after, SoC → soc_before
     setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% [${data.confidence}]`);
-    document.getElementById('extractedA').style.display = 'flex';
-    document.getElementById('kmA').textContent = data.km ?? '?';
-    document.getElementById('socA').textContent = (data.soc ?? '?') + '%';
     if (data.km != null) document.getElementById('km_after').value = data.km;
     if (data.soc != null) document.getElementById('soc_before').value = data.soc;
   } else if (slot === 'B') {
-    // Foto NACH dem Laden: nur SoC → soc_after
+    // Foto NACH dem Laden: SoC → soc_after
     setStatus(slot, 'success', `Erkannt – SoC nach Laden: ${data.soc ?? '?'}% [${data.confidence}]`);
-    document.getElementById('extractedB').style.display = 'flex';
-    document.getElementById('socB').textContent = (data.soc ?? '?') + '%';
     if (data.soc != null) document.getElementById('soc_after').value = data.soc;
   } else if (slot === 'C') {
     if (data.kwh != null) {
       setStatus(slot, 'success', `Erkannt – ${data.kwh} kWh${data.currency ? ' | ' + data.currency + ' CHF/EUR' : ''} [${data.confidence}]`);
-      document.getElementById('extractedC').style.display = 'flex';
-      document.getElementById('kwh_extracted').textContent = data.kwh + ' kWh';
+      const exC = document.getElementById('extractedC');
+      if (exC) exC.style.display = 'flex';
+      const kwhEl = document.getElementById('kwh_extracted');
+      if (kwhEl) kwhEl.textContent = data.kwh + ' kWh';
       document.getElementById('kwh_final').value = data.kwh;
     } else {
       setStatus(slot, 'error', 'Kein kWh-Wert erkannt – bitte manuell eingeben');
@@ -893,13 +900,14 @@ function getNum(id) {
 }
 
 function calculate() {
-  const kmBefore = getNum('km_before');   // auto vom letzten Eintrag
-  const kmAfter  = getNum('km_after');    // aus Foto A (vor dem Laden)
-  const socBefore = getNum('soc_before'); // aus Foto A (vor dem Laden)
-  const socAfter  = getNum('soc_after'); // aus Foto B (nach dem Laden)
+  const kmBefore  = getNum('km_before');  // leer beim ersten Eintrag
+  const kmAfter   = getNum('km_after');   // aus Foto A
+  const socBefore = getNum('soc_before'); // aus Foto A
+  const socAfter  = getNum('soc_after');  // aus Foto B
   const kwh = chargeMode === 'manual' ? getNum('kwh_manual') : getNum('kwh_final');
 
-  const deltaKm  = (kmBefore != null && kmAfter != null) ? kmAfter - kmBefore : null;
+  const isFirstEntry = kmBefore == null;
+  const deltaKm  = (!isFirstEntry && kmAfter != null) ? kmAfter - kmBefore : null;
   const deltaSoc = (socBefore != null && socAfter != null) ? socAfter - socBefore : null;
 
   let consumptionKm = null, capacity = null;
@@ -910,19 +918,23 @@ function calculate() {
     capacity = (kwh / (deltaSoc / 100)).toFixed(1);
   }
 
-  document.getElementById('res_consumption_km').textContent = consumptionKm ?? '—';
-  document.getElementById('res_delta_km').textContent = deltaKm != null ? deltaKm : '—';
+  document.getElementById('res_consumption_km').textContent = isFirstEntry ? 'Erster Eintrag' : (consumptionKm ?? '—');
+  document.getElementById('res_delta_km').textContent = deltaKm != null ? deltaKm : (isFirstEntry ? 'Erster Eintrag' : '—');
   document.getElementById('res_delta_soc').textContent = deltaSoc != null ? deltaSoc.toFixed(2) : '—';
   document.getElementById('res_capacity').textContent = capacity ? capacity + ' kWh' : '—';
   document.getElementById('resultsCard').style.display = 'block';
 
-  return { kmBefore, kmAfter, socBefore, socAfter, kwh, deltaKm, deltaSoc, consumptionKm, capacity };
+  return { kmBefore, kmAfter, socBefore, socAfter, kwh, deltaKm, deltaSoc, consumptionKm, capacity, isFirstEntry };
 }
 
 function saveEntry() {
   const vals = calculate();
-  if (!vals.kmAfter && !vals.kwh) {
-    showToast('Bitte mindestens km-Stand und kWh eingeben');
+  if (!vals.kmAfter) {
+    showToast('Bitte mindestens den aktuellen km-Stand eingeben');
+    return;
+  }
+  if (!vals.kwh) {
+    showToast('Bitte geladene kWh eingeben');
     return;
   }
 
@@ -938,12 +950,13 @@ function saveEntry() {
     delta_km: vals.deltaKm,
     delta_soc: vals.deltaSoc,
     consumption_km: vals.consumptionKm,
-    capacity: vals.capacity
+    capacity: vals.capacity,
+    first_entry: vals.isFirstEntry
   };
 
   entries.unshift(entry);
   localStorage.setItem('ev_entries', JSON.stringify(entries));
-  showToast('Eintrag gespeichert ✓');
+  showToast(vals.isFirstEntry ? 'Erster Eintrag gespeichert ✓ – ab jetzt wird Verbrauch berechnet' : 'Eintrag gespeichert ✓');
   resetForm();
 }
 
