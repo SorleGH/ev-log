@@ -408,9 +408,15 @@
     </div>
   </div>
 
-  <!-- BEFORE PHOTO -->
+  <!-- CURRENT DASHBOARD PHOTO -->
   <div class="card">
-    <div class="card-title"><div class="step-badge">2</div> Armaturenbrett VOR dem Laden</div>
+    <div class="card-title"><div class="step-badge">2</div> Armaturenbrett – aktueller Stand (vor dem Laden)</div>
+
+    <!-- Previous entry info -->
+    <div id="prevEntryInfo" style="display:none; margin-bottom:12px; padding:10px 12px; background:#f0f7ff; border:1px solid #ccd8e8; border-radius:6px;">
+      <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Letzter Eintrag (km-Stand vorher automatisch)</div>
+      <div style="font-family:var(--font-display); font-size:1rem; font-weight:600; color:var(--accent);" id="prevEntryText">—</div>
+    </div>
 
     <div class="photo-zone" id="zoneA" onclick="triggerFile('fileA')">
       <input type="file" id="fileA" accept="image/*" onchange="handlePhoto('A', this)">
@@ -425,38 +431,49 @@
 
     <div class="extracted" id="extractedA" style="display:none">
       <div class="extracted-val">
-        <div class="ev-label">km-Stand vorher</div>
+        <div class="ev-label">km-Stand aktuell</div>
         <div class="ev-value" id="kmA">—</div>
       </div>
       <div class="extracted-val">
-        <div class="ev-label">Ladestand vorher</div>
+        <div class="ev-label">Ladestand aktuell</div>
         <div class="ev-value" id="socA">—</div>
       </div>
     </div>
 
     <hr class="divider">
-    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">oder manuell:</div>
+    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">manuell / korrigieren:</div>
     <div class="row2">
       <div class="field mb0">
-        <label>km-Stand vorher</label>
-        <input type="number" id="km_before" placeholder="37723" step="1">
+        <label>km-Stand vorher (auto)</label>
+        <input type="number" id="km_before" placeholder="vom letzten Eintrag" step="1" readonly>
       </div>
       <div class="field mb0">
-        <label>Ladestand vorher (%)</label>
-        <input type="number" id="soc_before" placeholder="18.75" step="0.1" min="0" max="100">
+        <label>km-Stand aktuell</label>
+        <input type="number" id="km_after" placeholder="37723" step="1">
       </div>
     </div>
+    <div class="row2" style="margin-top:10px;">
+      <div class="field mb0">
+        <label>Ladestand vorher % (auto)</label>
+        <input type="number" id="soc_before" placeholder="vom letzten Eintrag" step="0.1" min="0" max="100" readonly>
+      </div>
+      <div class="field mb0">
+        <label>Ladestand aktuell (%)</label>
+        <input type="number" id="soc_after" placeholder="18.75" step="0.1" min="0" max="100">
+      </div>
+    </div>
+    <p class="hint" style="margin-top:8px;">⚠ km-Stand vorher und Ladestand vorher stammen automatisch vom letzten gespeicherten Eintrag. Beim ersten Eintrag bitte manuell eingeben (Feld anklicken zum Entsperren).</p>
   </div>
 
-  <!-- AFTER PHOTO -->
+  <!-- AFTER CHARGING PHOTO -->
   <div class="card">
-    <div class="card-title"><div class="step-badge">3</div> Armaturenbrett NACH dem Laden</div>
+    <div class="card-title"><div class="step-badge">3</div> Armaturenbrett NACH dem Laden – Ladestand</div>
 
     <div class="photo-zone" id="zoneB" onclick="triggerFile('fileB')">
       <input type="file" id="fileB" accept="image/*" onchange="handlePhoto('B', this)">
       <div id="zoneB-placeholder">
         <div class="photo-zone-icon">📷</div>
-        <div class="photo-zone-text">FOTO WÄHLEN / AUFNEHMEN</div>
+        <div class="photo-zone-text">FOTO NACH DEM LADEN</div>
       </div>
       <img id="previewB" class="photo-preview" alt="">
     </div>
@@ -465,26 +482,16 @@
 
     <div class="extracted" id="extractedB" style="display:none">
       <div class="extracted-val">
-        <div class="ev-label">km-Stand nachher</div>
-        <div class="ev-value" id="kmB">—</div>
-      </div>
-      <div class="extracted-val">
         <div class="ev-label">Ladestand nachher</div>
         <div class="ev-value" id="socB">—</div>
       </div>
     </div>
 
     <hr class="divider">
-    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">oder manuell:</div>
-    <div class="row2">
-      <div class="field mb0">
-        <label>km-Stand nachher</label>
-        <input type="number" id="km_after" placeholder="38120" step="1">
-      </div>
-      <div class="field mb0">
-        <label>Ladestand nachher (%)</label>
-        <input type="number" id="soc_after" placeholder="80" step="0.1" min="0" max="100">
-      </div>
+    <div class="card-title" style="margin-bottom:8px; font-size:0.65rem; color:var(--text-dim)">manuell / korrigieren:</div>
+    <div class="field mb0">
+      <label>Ladestand nach dem Laden (%)</label>
+      <input type="number" id="soc_after" placeholder="80" step="0.1" min="0" max="100">
     </div>
   </div>
 
@@ -529,18 +536,12 @@
     </div>
   </div>
 
-  <!-- RESULTS PREVIEW -->
   <div class="card" id="resultsCard" style="display:none">
     <div class="card-title">🔋 Berechnete Werte</div>
     <div class="result-grid">
       <div class="result-item highlight">
-        <div class="r-label">Verbrauch (km-Delta)</div>
+        <div class="r-label">Verbrauch</div>
         <div class="r-value" id="res_consumption_km">—</div>
-        <div class="r-unit">kWh/100km</div>
-      </div>
-      <div class="result-item">
-        <div class="r-label">Verbrauch (Trip)</div>
-        <div class="r-value" id="res_consumption_trip">—</div>
         <div class="r-unit">kWh/100km</div>
       </div>
       <div class="result-item">
@@ -643,10 +644,38 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('vehicleName').value = vehicle.name;
   document.getElementById('nomCapacity').value = vehicle.capacity;
   updateApiIndicator();
+  loadPrevEntry();
   renderHistory();
   renderStats();
   if (!apiKey) document.getElementById('apiSetupHint').style.display = 'block';
+  // Allow unlocking readonly fields on click
+  ['km_before','soc_before'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function() {
+      this.removeAttribute('readonly');
+      this.style.color = '';
+      this.style.borderColor = '';
+    });
+  });
 });
+
+function loadPrevEntry() {
+  if (!entries.length) return;
+  const last = entries[0];
+  const kmBefore = document.getElementById('km_before');
+  const socBefore = document.getElementById('soc_before');
+  if (last.km_after != null) {
+    kmBefore.value = last.km_after;
+    kmBefore.setAttribute('readonly', true);
+  }
+  if (last.soc_after != null) {
+    socBefore.value = last.soc_after;
+    socBefore.setAttribute('readonly', true);
+  }
+  const info = document.getElementById('prevEntryInfo');
+  const txt = document.getElementById('prevEntryText');
+  info.style.display = 'block';
+  txt.textContent = `${last.date}  |  ${last.km_after ?? '?'} km  |  SoC: ${last.soc_after ?? '?'}%`;
+}
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -771,7 +800,7 @@ Hinweise:
 - Falls kein kWh-Wert erkennbar: kwh: null`;
   }
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch('https://ev-log-proxy.heikohier.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
@@ -802,24 +831,22 @@ function applyExtracted(slot, data) {
   extractedData[slot] = data;
 
   if (slot === 'A') {
-    setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% | Trip: ${data.trip ?? '—'} km [${data.confidence}]`);
+    // Foto VOR dem Laden: km-Stand aktuell → km_after, SoC → soc_before
+    setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% [${data.confidence}]`);
     document.getElementById('extractedA').style.display = 'flex';
     document.getElementById('kmA').textContent = data.km ?? '?';
     document.getElementById('socA').textContent = (data.soc ?? '?') + '%';
-    if (data.km != null) document.getElementById('km_before').value = data.km;
-    if (data.soc != null) document.getElementById('soc_before').value = data.soc;
-    // Trip counter
-    if (data.trip != null) document.getElementById('entryNote').placeholder = 'Trip: ' + data.trip + ' km';
-  } else if (slot === 'B') {
-    setStatus(slot, 'success', `Erkannt – km: ${data.km ?? '?'} | SoC: ${data.soc ?? '?'}% [${data.confidence}]`);
-    document.getElementById('extractedB').style.display = 'flex';
-    document.getElementById('kmB').textContent = data.km ?? '?';
-    document.getElementById('socB').textContent = (data.soc ?? '?') + '%';
     if (data.km != null) document.getElementById('km_after').value = data.km;
+    if (data.soc != null) document.getElementById('soc_before').value = data.soc;
+  } else if (slot === 'B') {
+    // Foto NACH dem Laden: nur SoC → soc_after
+    setStatus(slot, 'success', `Erkannt – SoC nach Laden: ${data.soc ?? '?'}% [${data.confidence}]`);
+    document.getElementById('extractedB').style.display = 'flex';
+    document.getElementById('socB').textContent = (data.soc ?? '?') + '%';
     if (data.soc != null) document.getElementById('soc_after').value = data.soc;
   } else if (slot === 'C') {
     if (data.kwh != null) {
-      setStatus(slot, 'success', `Erkannt – ${data.kwh} kWh${data.currency ? ' | ' + data.currency + ' CHF' : ''} [${data.confidence}]`);
+      setStatus(slot, 'success', `Erkannt – ${data.kwh} kWh${data.currency ? ' | ' + data.currency + ' CHF/EUR' : ''} [${data.confidence}]`);
       document.getElementById('extractedC').style.display = 'flex';
       document.getElementById('kwh_extracted').textContent = data.kwh + ' kWh';
       document.getElementById('kwh_final').value = data.kwh;
@@ -854,44 +881,35 @@ function getNum(id) {
 }
 
 function calculate() {
-  const kmBefore = getNum('km_before');
-  const kmAfter = getNum('km_after');
-  const socBefore = getNum('soc_before');
-  const socAfter = getNum('soc_after');
+  const kmBefore = getNum('km_before');   // auto vom letzten Eintrag
+  const kmAfter  = getNum('km_after');    // aus Foto A (vor dem Laden)
+  const socBefore = getNum('soc_before'); // aus Foto A (vor dem Laden)
+  const socAfter  = getNum('soc_after'); // aus Foto B (nach dem Laden)
   const kwh = chargeMode === 'manual' ? getNum('kwh_manual') : getNum('kwh_final');
 
-  const deltaKm = (kmBefore != null && kmAfter != null) ? kmAfter - kmBefore : null;
+  const deltaKm  = (kmBefore != null && kmAfter != null) ? kmAfter - kmBefore : null;
   const deltaSoc = (socBefore != null && socAfter != null) ? socAfter - socBefore : null;
 
   let consumptionKm = null, capacity = null;
   if (deltaKm != null && deltaKm > 0 && kwh != null) {
     consumptionKm = (kwh / deltaKm * 100).toFixed(2);
   }
-
-  // Trip-based consumption
-  let consumptionTrip = null;
-  const trip = extractedData.A?.trip;
-  if (trip && trip > 0 && kwh != null) {
-    consumptionTrip = (kwh / trip * 100).toFixed(2);
-  }
-
   if (deltaSoc != null && deltaSoc > 0 && kwh != null) {
     capacity = (kwh / (deltaSoc / 100)).toFixed(1);
   }
 
   document.getElementById('res_consumption_km').textContent = consumptionKm ?? '—';
-  document.getElementById('res_consumption_trip').textContent = consumptionTrip ?? '—';
   document.getElementById('res_delta_km').textContent = deltaKm != null ? deltaKm : '—';
   document.getElementById('res_delta_soc').textContent = deltaSoc != null ? deltaSoc.toFixed(2) : '—';
   document.getElementById('res_capacity').textContent = capacity ? capacity + ' kWh' : '—';
   document.getElementById('resultsCard').style.display = 'block';
 
-  return { kmBefore, kmAfter, socBefore, socAfter, kwh, deltaKm, deltaSoc, consumptionKm, consumptionTrip, capacity };
+  return { kmBefore, kmAfter, socBefore, socAfter, kwh, deltaKm, deltaSoc, consumptionKm, capacity };
 }
 
 function saveEntry() {
   const vals = calculate();
-  if (!vals.kmBefore && !vals.kwh) {
+  if (!vals.kmAfter && !vals.kwh) {
     showToast('Bitte mindestens km-Stand und kWh eingeben');
     return;
   }
@@ -908,7 +926,6 @@ function saveEntry() {
     delta_km: vals.deltaKm,
     delta_soc: vals.deltaSoc,
     consumption_km: vals.consumptionKm,
-    consumption_trip: vals.consumptionTrip,
     capacity: vals.capacity
   };
 
@@ -920,7 +937,8 @@ function saveEntry() {
 
 function resetForm() {
   ['km_before','km_after','soc_before','soc_after','kwh_final','kwh_manual'].forEach(id => {
-    document.getElementById(id).value = '';
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
   document.getElementById('entryNote').value = '';
   document.getElementById('entryDate').value = today();
@@ -940,6 +958,8 @@ function resetForm() {
   });
   extractedData = { A: {}, B: {}, C: {} };
   document.getElementById('resultsCard').style.display = 'none';
+  // Reload previous entry for next recording
+  loadPrevEntry();
 }
 
 // ===== HISTORY =====
@@ -952,7 +972,7 @@ function renderHistory() {
 
   wrap.innerHTML = `<table>
     <thead><tr>
-      <th>Datum</th><th>km vorher</th><th>km nachher</th>
+      <th>Datum</th><th>km vor</th><th>km nach</th>
       <th>SoC vor</th><th>SoC nach</th><th>kWh</th>
       <th>Δkm</th><th>kWh/100km</th><th>Kapazität</th><th>Notiz</th><th></th>
     </tr></thead>
@@ -990,10 +1010,10 @@ function clearAll() {
 
 function exportCSV() {
   if (!entries.length) { showToast('Keine Daten zum Exportieren'); return; }
-  const header = 'Datum,km_vorher,km_nachher,soc_vorher_%,soc_nachher_%,kWh,delta_km,kWh_100km_delta,kWh_100km_trip,kapazitaet_kWh,notiz';
+  const header = 'Datum,km_vor,km_nach,soc_vor_%,soc_nach_%,kWh,delta_km,kWh_100km,kapazitaet_kWh,notiz';
   const rows = entries.map(e =>
     [e.date, e.km_before, e.km_after, e.soc_before, e.soc_after, e.kwh,
-     e.delta_km, e.consumption_km, e.consumption_trip, e.capacity,
+     e.delta_km, e.consumption_km, e.capacity,
      '"' + (e.note || '').replace(/"/g, '""') + '"'].join(',')
   );
   const csv = [header, ...rows].join('\n');
